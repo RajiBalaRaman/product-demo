@@ -82,6 +82,7 @@ class ProductController extends BaseController
         try {
             $validatedData = $request->validate([
                 'part_name' => 'required|string',
+                'stage_id' => 'required|string',
                 'part_number' => 'required|string|unique:products,part_number',
                 'total_qty' => 'required|integer|min:1',
                 'location' => 'nullable|string',
@@ -94,6 +95,7 @@ class ProductController extends BaseController
 
             $product = Product::create([
                 'part_number' => $validatedData['part_number'],
+                'stage_id' => $validatedData['stage_id'],
                 'total_qty' => $validatedData['total_qty'],
                 'location' => $validatedData['location'],
                 'part_name' => $validatedData['part_name'],
@@ -125,6 +127,7 @@ class ProductController extends BaseController
             // Validate request
             $validatedData = $request->validate([
                 'part_name' => 'required|string',
+                'stage_id' => 'required|string',
                 'part_number' => 'required|string|unique:products,part_number,' . $product->id,
                 'total_qty' => 'required|integer|min:1',
                 'location' => 'nullable|string',
