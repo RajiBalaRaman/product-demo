@@ -83,9 +83,10 @@ class ProductController extends BaseController
             $validatedData = $request->validate([
                 'part_name' => 'required|string',
                 'stage_id' => 'required|string',
-                'part_number' => 'required|string|unique:products,part_number',
+                'part_number' => 'required|string',
                 'total_qty' => 'required|integer|min:1',
                 'location' => 'nullable|string',
+                'comment' => 'nullable|string',
                 'serialized_status' => 'nullable|in:true,false,1,0,yes,no,enable,disable', // Accepts more variations
                 'serial_number' => 'nullable|unique:products,serial_number',
             ]);
@@ -101,6 +102,7 @@ class ProductController extends BaseController
                 'part_name' => $validatedData['part_name'],
                 'serialized_status' => $validatedData['serialized_status'],
                 'serial_number' => $validatedData['serial_number'],
+                'comment' => $validatedData['comment'],
                 'user_id' => $request->user()->id,
             ]);
 
@@ -128,9 +130,11 @@ class ProductController extends BaseController
             $validatedData = $request->validate([
                 'part_name' => 'required|string',
                 'stage_id' => 'required|string',
-                'part_number' => 'required|string|unique:products,part_number,' . $product->id,
+                // 'part_number' => 'required|string|unique:products,part_number,' . $product->id,
+                'part_number' => 'required|string',
                 'total_qty' => 'required|integer|min:1',
                 'location' => 'nullable|string',
+                'comment' => 'nullable|string',
                 'serialized_status' => 'nullable|in:true,false,1,0,yes,no,enable,disable', // Accepts different boolean formats
                 'serial_number' => 'nullable|unique:products,serial_number,' . $product->id,
             ]);
