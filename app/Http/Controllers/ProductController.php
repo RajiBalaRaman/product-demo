@@ -31,7 +31,12 @@ class ProductController extends BaseController
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
 
-            $products = Product::where('user_id', $user->id)->get();
+            // Check if the user is a super_admin
+            if ($user->role === 'super_admin') {
+                $products = Product::all();
+            } else {
+                $products = Product::where('user_id', $user->id)->get();
+            }
 
             return response()->json([
                 'message' => 'Products retrieved successfully',
@@ -89,11 +94,22 @@ class ProductController extends BaseController
                 'comment' => 'nullable|string',
                 'serialized_status' => 'nullable|in:true,false,1,0,yes,no,enable,disable', // Accepts more variations
                 'serial_number' => 'nullable|unique:products,serial_number',
+                'barcode_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Image validation
             ]);
 
             // Convert serialized_status into boolean
             $validatedData['serialized_status'] = filter_var($validatedData['serialized_status'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
 
+                        // Handle barcode image upload
+            if ($request->hasFile('barcode_image')) {
+                $barcodeImage = $request->file('barcode_image');
+                $filename = time() . '_' . $barcodeImage->getClientOriginalName(); // Unique filename
+                $barcodePath = 'barcodes/' . $filename; // Path inside public folder
+
+                $barcodeImage->move(public_path('barcodes'), $filename); // Move to public/barcodes
+
+                $validatedData['barcode_image'] = $barcodePath;
+            }
             $product = Product::create([
                 'part_number' => $validatedData['part_number'],
                 'stage_id' => $validatedData['stage_id'],
@@ -103,6 +119,7 @@ class ProductController extends BaseController
                 'serialized_status' => $validatedData['serialized_status'],
                 'serial_number' => $validatedData['serial_number'],
                 'comment' => $validatedData['comment'],
+                'barcode_image' => $validatedData['barcode_image'] ?? null,
                 'user_id' => $request->user()->id,
             ]);
 
@@ -111,7 +128,7 @@ class ProductController extends BaseController
                 'product' => $product,
             ], 201);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Something went wrong', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Something went wrong', 'error' => $e->getMessage()], 400);
         }
     }
 
@@ -137,6 +154,7 @@ class ProductController extends BaseController
                 'comment' => 'nullable|string',
                 'serialized_status' => 'nullable|in:true,false,1,0,yes,no,enable,disable', // Accepts different boolean formats
                 'serial_number' => 'nullable|unique:products,serial_number,' . $product->id,
+                'barcode_image' => 'nullable|mimes:jpg,jpeg,png,gif,bmp,svg|max:2048', // Image validation
             ]);
 
             // Convert serialized_status into a boolean
